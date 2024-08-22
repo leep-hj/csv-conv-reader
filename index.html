@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>채팅 UI</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        h1 {
+            margin-bottom: 20px;
+        }
+        #upload {
+            margin-bottom: 20px;
+        }
+        .chat-container {
+            display: flex;
+            width: 80%;
+            height: 500px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        .chat-box {
+            flex: 1;
+            padding: 10px;
+            overflow-y: auto;
+            border-right: 1px solid #ddd;
+        }
+        .chat-box:last-child {
+            border-right: none;
+        }
+        .message {
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: flex-start;
+        }
+        .message img {
+            max-width: 200px;
+            height: auto;
+        }
+        .message.sender {
+            justify-content: flex-start; /* 기본 위치는 왼쪽 */
+        }
+        .message.sender-right {
+            justify-content: flex-end; /* 오른쪽 정렬 */
+        }
+    </style>
+</head>
+<body>
+    <h1>채팅 기록</h1>
+    <input type="file" id="upload" accept=".csv">
+    <div class="chat-container" id="chatContainer">
+        <div class="chat-box">
+            <h2>전체 채팅</h2>
+            <div id="messages"></div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('upload').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file && file.type === "text/csv") {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const csvData = e.target.result;
+                    parseCSV(csvData);
+                };
+                reader.readAsText(file);
+            } else {
+                alert("CSV 파일을 선택하세요.");
+            }
+        });
+
+        function parseCSV(data) {
+            const rows = data.split('\n').map(row => row.split(','));
+            rows.shift(); // 첫 번째 행(헤더)을 제거
+
+            const messagesContainer = document.getElementById('messages');
+            messagesContainer.innerHTML = ''; // 이전 메시지 초기화
+
+            let previousMrid = ""; 
+            rows.forEach(row => {
+                const [mrid, send_fid, regDate, msg] = row.map(item => item.replace(/(^"|"$)/g, '')); // 문자열 양쪽의 따옴표 제거
+
+                const messageDiv = document.createElement('div');
+
+                // mrid가 변경된 경우 구분선 추가
+                if (previousMrid !== mrid) {
+                    const separatorDiv = document.createElement('div');
+                    separatorDiv.innerHTML = `<hr style="margin: 20px 0;">` // 구분선
+                    messagesContainer.appendChild(separatorDiv);
+                    previousMrid = mrid; // 현재 mrid를 이전 mrid로 업데이트
+                }
+
+                messageDiv.classList.add('message');
+                if (msg.startsWith('http')) {
+                    messageDiv.innerHTML = `<img src="${msg}" alt="Image">`;
+                } else {
+                    messageDiv.textContent = msg;
+                }
+
+                // 발신자 ID에 따른 정렬
+                if (send_fid) {
+                    messageDiv.classList.add('sender');
+                    // 발신자 ID가 30402224으로 끝나는 경우 오른쪽으로 정렬 (예시)
+                    if (send_fid === "30402224") {
+                        messageDiv.classList.add('sender-right'); // 오른쪽 정렬
+                    }
+                }
+
+                messagesContainer.appendChild(messageDiv);
+            });
+        }
+    </script>
+</body>
+</html>
