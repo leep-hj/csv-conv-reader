@@ -37,17 +37,26 @@
         .message {
             margin-bottom: 15px;
             display: flex;
-            justify-content: flex-start;
         }
-        .message img {
-            max-width: 200px;
+        .bubble {
+            padding: 10px;
+            border-radius: 10px;
+            background-color: #f1f1f1;
+            position: relative;
+            max-width: 70%;
+        }
+        .bubble.sender-right {
+            background-color: #d1ffd1;
+            align-self: flex-end;
+        }
+        .fid-label {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        .messageimg {
+            max-width: 100%;
             height: auto;
-        }
-        .message.sender {
-            justify-content: flex-start; /* 기본 위치는 왼쪽 */
-        }
-        .message.sender-right {
-            justify-content: flex-end; /* 오른쪽 정렬 */
         }
     </style>
 </head>
@@ -83,36 +92,48 @@
             const messagesContainer = document.getElementById('messages');
             messagesContainer.innerHTML = ''; // 이전 메시지 초기화
 
-            let previousMrid = ""; 
+            let firstUserFid = "";
+            let previousMrid = "";
             rows.forEach(row => {
                 const [mrid, send_fid, regDate, msg] = row.map(item => item.replace(/(^"|"$)/g, '')); // 문자열 양쪽의 따옴표 제거
 
-                const messageDiv = document.createElement('div');
-
-                // mrid가 변경된 경우 구분선 추가
                 if (previousMrid !== mrid) {
                     const separatorDiv = document.createElement('div');
-                    separatorDiv.innerHTML = `<hr style="margin: 20px 0;">` // 구분선
+                    separatorDiv.innerHTML = `<hr style="margin: 20px 0;">`;
                     messagesContainer.appendChild(separatorDiv);
-                    previousMrid = mrid; // 현재 mrid를 이전 mrid로 업데이트
+                    previousMrid = mrid;
+                    firstUserFid = send_fid;
                 }
 
+                const messageDiv = document.createElement('div');
                 messageDiv.classList.add('message');
+
+                const bubbleDiv = document.createElement('div');
+                bubbleDiv.classList.add('bubble');
+
+                const fidLabel = document.createElement('div');
+                fidLabel.classList.add('fid-label');
+                fidLabel.textContent = `ID: ${send_fid}`;
+                bubbleDiv.appendChild(fidLabel);
+
                 if (msg.startsWith('http')) {
-                    messageDiv.innerHTML = `<img src="${msg}" alt="Image">`;
+                    bubbleDiv.innerHTML += `<img src="${msg}" alt="Image" class="messageimg">`;
                 } else {
-                    messageDiv.textContent = msg;
+                    bubbleDiv.innerHTML += msg;
                 }
 
-                // 발신자 ID에 따른 정렬
                 if (send_fid) {
-                    messageDiv.classList.add('sender');
-                    // 발신자 ID가 30402224으로 끝나는 경우 오른쪽으로 정렬 (예시)
-                    if (send_fid === "30402224") {
-                        messageDiv.classList.add('sender-right'); // 오른쪽 정렬
+                    bubbleDiv.classList.add('sender');
+                    if (firstUserFid === send_fid) {
+                        bubbleDiv.classList.add('sender-right');
+                        messageDiv.style.display = 'flex';
+                        messageDiv.style.justifyContent = 'flex-end';
                     }
+                } else {
+                    messageDiv.style.display = 'flex';
+                    messageDiv.style.justifyContent = 'flex-start';
                 }
-
+                messageDiv.appendChild(bubbleDiv);
                 messagesContainer.appendChild(messageDiv);
             });
         }
