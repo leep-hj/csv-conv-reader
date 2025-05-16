@@ -89,6 +89,7 @@
             }
         });
 
+        const imageRegex = /^http.*(jpeg|jpg|png|webp|gif)$/;
         let maxImageDivIndex = 0;
         let curImageDivIndex = 0;
         function parseCSV(data) {
@@ -98,6 +99,7 @@
             const messagesContainer = document.getElementById('messages');
             messagesContainer.innerHTML = ''; // 이전 메시지 초기화
             curImageDivIndex = 0;
+            let bubbleIndex = 0;
 
             let firstUserFid = "";
             let previousMrid = "";
@@ -114,21 +116,31 @@
 
                 const messageDiv = document.createElement('div');
                 messageDiv.classList.add('message');
+                messageDiv.onclick = onBubbleClick;
 
                 const bubbleDiv = document.createElement('div');
+                bubbleDiv.id = `bubble-${bubbleIndex}`;
                 bubbleDiv.classList.add('bubble');
-
+                
                 const fidLabel = document.createElement('div');
                 fidLabel.classList.add('fid-label');
                 fidLabel.textContent = `ID: ${send_fid}`;
                 bubbleDiv.appendChild(fidLabel);
-
-                if (msg.startsWith('http')) {
+                
+                
+                if (imageRegex.test(msg)) {
                     messageDiv.id = `imageBubble-${curImageDivIndex++}`;
                     bubbleDiv.innerHTML += `<img id="image" src="${msg}" alt="Image" class="messageimg">`;
+                    bubbleDiv.setAttribute('tts', '사진');
                 } else {
                     bubbleDiv.innerHTML += msg;
+                    if (msg.startsWith('http')) {
+                        bubbleDiv.setAttribute('tts', '링크');
+                    } else {
+                        bubbleDiv.setAttribute('tts', msg);
+                    }
                 }
+                bubbleDiv.setAttribute('tts_index', bubbleIndex++);
 
                 if (send_fid) {
                     bubbleDiv.classList.add('sender');
@@ -136,10 +148,12 @@
                         bubbleDiv.classList.add('sender-right');
                         messageDiv.style.display = 'flex';
                         messageDiv.style.justifyContent = 'flex-end';
+                        bubbleDiv.setAttribute('tts_sender', "나");
                     }
                 } else {
                     messageDiv.style.display = 'flex';
                     messageDiv.style.justifyContent = 'flex-start';
+                    bubbleDiv.setAttribute('tts_sender', "너");
                 }
                 messageDiv.appendChild(bubbleDiv);
                 messagesContainer.appendChild(messageDiv);
@@ -158,6 +172,44 @@
             const targetElement = document.getElementById(`imageBubble-${curImageDivIndex}`);
             targetElement && targetElement.scrollIntoView({ behavior: "smooth" });
         }
+
+        function onBubbleClick(event) {
+            const bubbleDiv = event.currentTarget.querySelector('.bubble');
+            const ttsIndex = bubbleDiv.getAttribute('tts_index');
+            if (isPlaying) {
+                stopTts();
+            } else {
+                playTts(ttsIndex);
+            }
+        };
+
+        let isPlaying = false;
+        function stopTts() {
+            if (isPlaying) {
+                window.speechSynthesis.cancel();
+                isPlaying = false;
+            }
+        }
+        function playTts(ttsIndex) {
+            isPlaying = true;
+            const bubbleDiv = document.getElementById(`bubble-${ttsIndex}`);
+            if (bubbleDiv) {
+                const ttsSender = bubbleDiv.getAttribute('tts_sender');
+                const ttsText = bubbleDiv.getAttribute('tts');
+                console.log(`TTS Text: ${ttsIndex} - ${ttsText}`);
+                if (ttsText) {
+                    const utterance = new SpeechSynthesisUtterance(`${ttsSender}  ${ttsText}`);
+                    utterance.lang = 'ko-KR';
+                    utterance.onend = () => playTts(Number(ttsIndex) + 1);
+                    utterance.onerror = () => playTts(Number(ttsIndex) + 1);
+
+                    window.speechSynthesis.speak(utterance);
+                }
+            } else {
+                stopTts();
+            }
+        }
+
     </script>
 </body>
 </html>
