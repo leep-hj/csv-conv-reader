@@ -58,6 +58,9 @@
             max-width: 100%;
             height: auto;
         }
+        .messageimgNone {
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -70,6 +73,7 @@
         </div>
     </div>
     <div style="margin-top: 10px;">
+        <button onclick="showPhoto()">사진 표시</button>
         <button onclick="scrollToPrevious()">이전 사진</button>
         <button onclick="scrollToNext()">다음 사진</button>
     </div>
@@ -130,7 +134,7 @@
                 
                 if (imageRegex.test(msg)) {
                     messageDiv.id = `imageBubble-${curImageDivIndex++}`;
-                    bubbleDiv.innerHTML += `<img id="image" src="${msg}" alt="Image" class="messageimg">`;
+                    bubbleDiv.innerHTML += `<img tag="image" src="${msg}" alt="Image" class="messageimg messageimgNone">`;
                     bubbleDiv.setAttribute('tts', '사진');
                 } else {
                     bubbleDiv.innerHTML += msg;
@@ -160,6 +164,13 @@
             });
             maxImageDivIndex = curImageDivIndex;
             curImageDivIndex = -1;
+        }
+
+        function showPhoto() {
+            const imageElements = document.getElementsByClassName('messageimg');
+            for (let index = 0; index < imageElements.length; index++) {
+                imageElements[index].classList.toggle('messageimgNone');
+            }
         }
 
         function scrollToPrevious() {
@@ -209,7 +220,6 @@
                 stopTts();
             }
         }
-
     </script>
 </body>
 </html>
