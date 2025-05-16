@@ -69,6 +69,10 @@
             <div id="messages"></div>
         </div>
     </div>
+    <div style="margin-top: 10px;">
+        <button onclick="scrollToPrevious()">이전 사진</button>
+        <button onclick="scrollToNext()">다음 사진</button>
+    </div>
 
     <script>
         document.getElementById('upload').addEventListener('change', function(event) {
@@ -85,12 +89,15 @@
             }
         });
 
+        let maxImageDivIndex = 0;
+        let curImageDivIndex = 0;
         function parseCSV(data) {
             const rows = data.split('\n').map(row => row.split(','));
             rows.shift(); // 첫 번째 행(헤더)을 제거
 
             const messagesContainer = document.getElementById('messages');
             messagesContainer.innerHTML = ''; // 이전 메시지 초기화
+            curImageDivIndex = 0;
 
             let firstUserFid = "";
             let previousMrid = "";
@@ -117,7 +124,8 @@
                 bubbleDiv.appendChild(fidLabel);
 
                 if (msg.startsWith('http')) {
-                    bubbleDiv.innerHTML += `<img src="${msg}" alt="Image" class="messageimg">`;
+                    messageDiv.id = `imageBubble-${curImageDivIndex++}`;
+                    bubbleDiv.innerHTML += `<img id="image" src="${msg}" alt="Image" class="messageimg">`;
                 } else {
                     bubbleDiv.innerHTML += msg;
                 }
@@ -136,6 +144,19 @@
                 messageDiv.appendChild(bubbleDiv);
                 messagesContainer.appendChild(messageDiv);
             });
+            maxImageDivIndex = curImageDivIndex;
+            curImageDivIndex = -1;
+        }
+
+        function scrollToPrevious() {
+            curImageDivIndex = curImageDivIndex > 0 ? curImageDivIndex - 1 : maxImageDivIndex - 1;
+            const targetElement = document.getElementById(`imageBubble-${curImageDivIndex}`);
+            targetElement && targetElement.scrollIntoView({ behavior: "smooth" });
+        }
+        function scrollToNext() {
+            curImageDivIndex = curImageDivIndex < maxImageDivIndex - 1 ? curImageDivIndex + 1 : 0;
+            const targetElement = document.getElementById(`imageBubble-${curImageDivIndex}`);
+            targetElement && targetElement.scrollIntoView({ behavior: "smooth" });
         }
     </script>
 </body>
