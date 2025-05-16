@@ -194,14 +194,14 @@
             isPlaying = true;
             const bubbleDiv = document.getElementById(`bubble-${ttsIndex}`);
             if (bubbleDiv) {
+                bubbleDiv.scrollIntoView({ behavior: "smooth" });
                 const ttsSender = bubbleDiv.getAttribute('tts_sender');
                 const ttsText = bubbleDiv.getAttribute('tts');
-                console.log(`TTS Text: ${ttsIndex} - ${ttsText}`);
                 if (ttsText) {
                     const utterance = new SpeechSynthesisUtterance(`${ttsSender}  ${ttsText}`);
                     utterance.lang = 'ko-KR';
-                    utterance.onend = () => playTts(Number(ttsIndex) + 1);
-                    utterance.onerror = () => playTts(Number(ttsIndex) + 1);
+                    utterance.onend = () => isPlaying && playTts(Number(ttsIndex) + 1);
+                    utterance.onerror = () => isPlaying && playTts(Number(ttsIndex) + 1);
 
                     window.speechSynthesis.speak(utterance);
                 }
